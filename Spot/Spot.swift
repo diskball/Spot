@@ -10,7 +10,7 @@ import UIKit
 
 extension UIWindow {
     open override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
-        if Spot.sharedInstance.handling {
+        if Spot.sharedInstance.handling && !Spot.sharedInstance.onScreen {
             Spot.launchFlow()
         }
     }
@@ -20,6 +20,7 @@ extension UIWindow {
     
     static let sharedInstance = Spot()
     var handling: Bool = false
+    var onScreen: Bool = false
     
     public static func start() {
         sharedInstance.handling = true
@@ -53,6 +54,7 @@ extension UIWindow {
     
     static func loadViewControllers(withScreenshot screenshot: UIImage) {
         // Handle pod bundle (if installed via 'pod install') or local for example
+        sharedInstance.onScreen = true
         var storyboard: UIStoryboard
         let podBundle = Bundle(for: self.classForCoder())
         if let bundleURL = podBundle.url(forResource: "Spot", withExtension: "bundle") {
@@ -66,9 +68,15 @@ extension UIWindow {
         if let initialViewController = storyboard.instantiateInitialViewController() as? OrientationLockNavigationController {
             initialViewController.orientationToLock = UIDevice.current.orientation
             let window = UIApplication.shared.keyWindow
-            window?.rootViewController?.present(initialViewController, animated: true, completion: nil)
-            if let screenshotViewController = initialViewController.topViewController as? SpotViewController {
-                screenshotViewController.screenshot = screenshot
+            if var topController = window?.rootViewController {
+                while let presentedViewController = topController.presentedViewController {
+                    topController = presentedViewController
+                }
+                // topController should now be your topmost view controller
+                topController.present(initialViewController, animated: true, completion: nil)
+                if let screenshotViewController = initialViewController.topViewController as? SpotViewController {
+                    screenshotViewController.screenshot = screenshot
+                }
             }
         }
     }
