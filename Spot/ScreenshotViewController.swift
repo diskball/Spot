@@ -164,8 +164,6 @@ extension SpotViewController: MFMailComposeViewControllerDelegate {
     // MARK: MFMailComposeViewControllerDelegate methods
     
     func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-        self.dismiss(animated: true, completion: {
-            Spot.sharedInstance.onScreen = false
-        })
+        self.dismiss(animated: true, completion: nil)
     }
 }
